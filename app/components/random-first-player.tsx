@@ -10,6 +10,7 @@ type Props = {
 
 export function RandomFirstPlayer(props: Props) {
   const [firstPlayer, setFirstPlayer] = useState<TileValue | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   function handleClick() {
     if (firstPlayer !== null) return;
@@ -17,9 +18,15 @@ export function RandomFirstPlayer(props: Props) {
     setFirstPlayer(choice);
   }
 
+  function handleConfirm() {
+    if (!firstPlayer) return;
+    setConfirmed(true);
+    props.onPick(firstPlayer);
+  }
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      <h1>Scelta casuale di chi inizia</h1>
+    <div className="flex flex-col items-center gap-2 p-4">
+      <h1 className="text-lg font-semibold">Scelta casuale di chi inizia</h1>
       <p>
         {props.player1} (X) oppure {props.player2} (O)
       </p>
@@ -27,6 +34,7 @@ export function RandomFirstPlayer(props: Props) {
         type="button"
         label="Chi inizia? (casuale)"
         onClick={handleClick}
+        disabled={firstPlayer !== null}
       />
       {firstPlayer && (
         <>
@@ -37,7 +45,8 @@ export function RandomFirstPlayer(props: Props) {
           <Button
             type="button"
             label="Continua"
-            onClick={() => props.onPick(firstPlayer)}
+            onClick={handleConfirm}
+            disabled={confirmed}
           />
         </>
       )}
