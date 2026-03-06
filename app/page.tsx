@@ -85,6 +85,18 @@ export default function Page() {
     });
   }
 
+  function handleFullReset() {
+    setState({
+      player1: "",
+      player2: "",
+      currentPlayer: null,
+      size: null,
+      board: [],
+      winner: null,
+      history: [],
+    });
+  }
+
   function handleUndo() {
     setState((prev) => {
       if (prev.history.length === 0) return prev;
@@ -99,32 +111,38 @@ export default function Page() {
     });
   }
 
+  const isPlaying = !!(state.player1 && state.currentPlayer && state.size);
+
   return (
-    <>
-      {!state.player1 && <PlayersNameFrom onDone={handleNames} />}
-      {state.player1 && !state.currentPlayer && (
-        <RandomFirstPlayer
-          player1={state.player1}
-          player2={state.player2}
-          onPick={handleStart}
-        />
-      )}
-      {state.player1 && state.currentPlayer && !state.size && (
-        <BoardSizePicker onSizeSelected={handleSize} />
-      )}
-      {state.player1 && state.currentPlayer && state.size && (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black">
+      {isPlaying ? (
         <PlayingBoard
           player1={state.player1}
           player2={state.player2}
-          currentPlayer={state.currentPlayer}
+          currentPlayer={state.currentPlayer!}
           board={state.board}
           winner={state.winner}
           canUndo={state.history.length > 0}
           onPlay={handlePlay}
           onUndo={handleUndo}
           onRestart={handleRestart}
+          onResetPlayers={handleFullReset}
         />
+      ) : (
+        <div className="flex flex-col items-center gap-12">
+          <PlayersNameFrom onDone={handleNames} />
+          {state.player1 && (
+            <RandomFirstPlayer
+              player1={state.player1}
+              player2={state.player2}
+              onPick={handleStart}
+            />
+          )}
+          {state.player1 && state.currentPlayer && (
+            <BoardSizePicker onSizeSelected={handleSize} />
+          )}
+        </div>
       )}
-    </>
+    </div>
   );
 }
