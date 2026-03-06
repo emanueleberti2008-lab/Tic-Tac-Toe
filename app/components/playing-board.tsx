@@ -12,6 +12,7 @@ type Props = {
   onPlay: (nextBoard: (TileValue | null)[][], nextPlayer: TileValue) => void;
   onUndo: () => void;
   onRestart: () => void;
+  onResetPlayers: () => void;
 };
 
 function getCurrentName(
@@ -30,34 +31,80 @@ function getWinnerName(
   return winner === "X" ? player1 : player2;
 }
 
+function isBoardFull(board: (TileValue | null)[][]): boolean {
+  return board.every((row) => row.every((cell) => cell !== null));
+}
+
 export function PlayingBoard(props: Props) {
+  const isDraw = !props.winner && isBoardFull(props.board);
+
   return (
-    <>
-      <h1>Tic Tac Toe</h1>
-      {props.winner ? (
-        <>
-          <p>{`Ha vinto il giocatore ${getWinnerName(props.winner, props.player1, props.player2)} (${props.winner})`}</p>
-          <Button type="button" label="Ricomincia" onClick={props.onRestart} />
-        </>
-      ) : (
-        <p>{`Turno: ${getCurrentName(props.currentPlayer, props.player1, props.player2)} (${props.currentPlayer})`}</p>
-      )}
-      <Board
-        board={props.board}
-        currentPlayer={props.currentPlayer}
-        winner={props.winner}
-        onPlay={(nextBoard: (TileValue | null)[][]) =>
-          props.onPlay(nextBoard, props.currentPlayer === "X" ? "O" : "X")
-        }
-      />
-      {!props.winner && (
-        <Button
-          type="button"
-          label="Annulla ultima mossa"
-          onClick={props.onUndo}
-          disabled={!props.canUndo}
+    <div className="flex flex-col items-center justify-center p-6">
+      <h1 className="text-lg font-semibold mb-4">Tic Tac Toe</h1>
+
+      <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center gap-4 w-fit aspect-square justify-center text-black">
+        {!props.winner && !isDraw && (
+          <div className="w-full flex items-center">
+            <p className="font-medium">
+              {`Turno: ${getCurrentName(props.currentPlayer, props.player1, props.player2)} (${props.currentPlayer})`}
+            </p>
+          </div>
+        )}
+
+        {props.winner ? (
+          <div className="flex flex-col items-center gap-3">
+            <p className="font-medium">{`Ha vinto ${getWinnerName(props.winner, props.player1, props.player2)} (${props.winner})`}</p>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                label="Ricomincia"
+                onClick={props.onRestart}
+              />
+              <Button
+                type="button"
+                label="Reset giocatori"
+                onClick={props.onResetPlayers}
+              />
+            </div>
+          </div>
+        ) : isDraw ? (
+          <div className="flex flex-col items-center gap-3">
+            <p className="font-medium">Pareggio! Vuoi ricominciare?</p>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                label="Ricomincia"
+                onClick={props.onRestart}
+              />
+              <Button
+                type="button"
+                label="Reset giocatori"
+                onClick={props.onResetPlayers}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        <Board
+          board={props.board}
+          currentPlayer={props.currentPlayer}
+          winner={props.winner}
+          onPlay={(nextBoard) =>
+            props.onPlay(nextBoard, props.currentPlayer === "X" ? "O" : "X")
+          }
         />
-      )}
-    </>
+
+        {!props.winner && !isDraw && (
+          <div className="w-full flex justify-end">
+            <Button
+              type="button"
+              label="Annulla mossa precedente"
+              onClick={props.onUndo}
+              disabled={!props.canUndo}
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
