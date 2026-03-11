@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlayersNameFrom } from "./components/players-name-from";
 import { RandomFirstPlayer } from "./components/random-first-player";
 import { BoardSizePicker } from "./components/board-size-picker";
@@ -9,11 +9,13 @@ import { TileValue } from "./types/tile-values";
 import { BoardSize } from "./types/board-size";
 import { findWinner } from "./utils/find-winner";
 import { boardUtils } from "./utils/board-utils";
+import { scoreUtils, PlayerScore } from "./utils/score-utils";
 
 type GameState = {
   player1: string;
   player2: string;
   currentPlayer: TileValue | null;
+  firstPlayer: TileValue | null;
   size: BoardSize | null;
   board: (TileValue | null)[][];
   winner: TileValue | null;
@@ -25,11 +27,18 @@ export default function Page() {
     player1: "",
     player2: "",
     currentPlayer: null,
+    firstPlayer: null,
     size: null,
     board: [],
     winner: null,
     history: [],
   });
+
+  const [scores, setScores] = useState<PlayerScore[]>([]);
+
+  useEffect(() => {
+    setScores(scoreUtils.getAll());
+  }, []);
 
   function handleNames({
     player1,
@@ -42,7 +51,7 @@ export default function Page() {
   }
 
   function handleStart(firstPlayer: TileValue) {
-    setState((prev) => ({ ...prev, currentPlayer: firstPlayer }));
+    setState((prev) => ({ ...prev, currentPlayer: firstPlayer, firstPlayer }));
   }
 
   function handleSize({ size }: { size: BoardSize }) {
@@ -63,6 +72,11 @@ export default function Page() {
     if (state.size === null) return;
     const hasWinner = findWinner(nextBoard, state.size, state.currentPlayer);
     const winner = hasWinner ? state.currentPlayer : null;
+    if (winner) {
+      const winnerName = winner === "X" ? state.player1 : state.player2;
+      scoreUtils.addWin(winnerName);
+      setScores(scoreUtils.getAll());
+    }
     setState((prev) => ({
       ...prev,
       board: nextBoard,
@@ -75,11 +89,12 @@ export default function Page() {
   function handleRestart() {
     setState((prev) => {
       if (prev.size === null) return prev;
+      if (prev.firstPlayer === null) return prev;
       return {
         ...prev,
         board: boardUtils.empty(prev.size),
         winner: null,
-        currentPlayer: prev.currentPlayer,
+        currentPlayer: prev.firstPlayer,
         history: [],
       };
     });
@@ -90,6 +105,7 @@ export default function Page() {
       player1: "",
       player2: "",
       currentPlayer: null,
+      firstPlayer: null,
       size: null,
       board: [],
       winner: null,
@@ -123,6 +139,7 @@ export default function Page() {
           board={state.board}
           winner={state.winner}
           canUndo={state.history.length > 0}
+          scores={scores}
           onPlay={handlePlay}
           onUndo={handleUndo}
           onRestart={handleRestart}
